@@ -1,0 +1,30 @@
+programa
+
+  numero a, b;
+  texto  t1;
+
+  leia(a);
+  leia(b);
+  leia(t1);
+  
+  a = 1 + 2 * 10 / b;
+  
+
+  se ( a > b ) {
+     escreva (a);
+  }
+  senao {
+     escreva (b);
+  }
+  
+  escreva (10);
+  escreva (t1);
+  escreva ("ola");
+
+  enquanto (a > b) {
+  	escreva (a);
+  	a = a-1;
+  }
+
+
+fimprog;
