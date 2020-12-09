@@ -19,6 +19,7 @@ public class CommandEnquanto extends AbstractCommand {
 		str.append("while ("+condition+") {\n");
 		for (AbstractCommand cmd: comando) {
 			str.append(cmd.generateJavaCode());
+			str.append("\n");
 		}
 		str.append("}");
 		

@@ -1,30 +1,41 @@
 programa
 
   numero a, b;
-  texto  t1;
+  texto  t1, t2, t3;
 
+  escreva ("Digite um numero:");
   leia(a);
+  escreva ("Digite um numero:");
   leia(b);
+  escreva ("Digite um texto:");
   leia(t1);
   
-  a = 1 + 2 * 10 / b;
-  
 
-  se ( a > b ) {
-     escreva (a);
-  }
+  a = 1 + 2 * 10 / b;
+  t2 = "ola mundo";
+  t3 = t2;
+ 
+  se (b < 10) {
+  	escreva (a);
+  } 
   senao {
-     escreva (b);
+  	escreva (b);
   }
+
   
   escreva (10);
   escreva (t1);
-  escreva ("ola");
+  escreva (t2);
+  escreva (t3);
 
   enquanto (a > b) {
   	escreva (a);
   	a = a-1;
   }
-
+  
+  enquanto (a < b) {
+  	escreva (a);
+  	a = a+1;
+  }
 
 fimprog;

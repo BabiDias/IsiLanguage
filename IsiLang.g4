@@ -26,7 +26,7 @@ grammar IsiLang;
 	private ArrayList<AbstractCommand> curThread;
 	private Stack<ArrayList<AbstractCommand>> stack = new Stack<ArrayList<AbstractCommand>>();
 	private String _readID;
-	private String _writeID;
+	private String _exprEscreva;
 	private String _exprID;
 	private String _exprContent;
 	private String _exprIf;
@@ -38,6 +38,20 @@ grammar IsiLang;
 	public void verificaID(String id){
 		if (!symbolTable.exists(id)){
 			throw new IsiSemanticException("Symbol "+id+" not declared");
+		}
+	}
+	
+	public void verificaIDNumber(String id){
+		verificaID(id);
+		if (((IsiVariable) symbolTable.get(id)).getType() != 0){
+			throw new IsiSemanticException("Variable "+id+" is not type NUMBER");
+		}
+	}
+	
+	public void verificaIDText(String id){
+		verificaID(id);
+		if (((IsiVariable) symbolTable.get(id)).getType() != 1){
+			throw new IsiSemanticException("Variable "+id+" is not type TEXT");
 		}
 	}
 	
@@ -68,8 +82,7 @@ declaravar :  tipo ID  {
 	                  symbol = new IsiVariable(_varName, _tipo, _varValue);
 	                  if (!symbolTable.exists(_varName)){
 	                     symbolTable.add(symbol);	
-	                  }
-	                  else{
+	                  } else{
 	                  	 throw new IsiSemanticException("Symbol "+_varName+" already declared");
 	                  }
                     } 
@@ -80,8 +93,7 @@ declaravar :  tipo ID  {
 	                  symbol = new IsiVariable(_varName, _tipo, _varValue);
 	                  if (!symbolTable.exists(_varName)){
 	                     symbolTable.add(symbol);	
-	                  }
-	                  else{
+	                  } else{
 	                  	 throw new IsiSemanticException("Symbol "+_varName+" already declared");
 	                  }
                     }
@@ -123,35 +135,41 @@ cmdLeitura	: 'leia' AP
 			
 cmdEscrita	: 'escreva' 
                  AP 
-                 ( ID {verificaID(_input.LT(-1).getText());}
-                 | TEXT
-                 | NUMBER) { _writeID = _input.LT(-1).getText(); }
+                 ( ID		{ verificaID(_input.LT(-1).getText()); }
+                 | NUMBER   
+                 | TEXT) 	{ _exprEscreva = _input.LT(-1).getText(); }
                  FP 
                  SC
                {
-               	  CommandEscrita cmd = new CommandEscrita(_writeID);
+               	  CommandEscrita cmd = new CommandEscrita(_exprEscreva);
                	  stack.peek().add(cmd);
                }
 			;
+	
 			
-cmdExpr		:  ID { verificaID(_input.LT(-1).getText());
-                    _exprID = _input.LT(-1).getText();
-                   } 
-               ATTR { _exprContent = ""; } 
-               expr 
+cmdExpr		:  ( ID   { verificaIDText(_input.LT(-1).getText());
+                        _exprID = _input.LT(-1).getText(); } 
+                 ATTR { _exprContent = ""; } 
+                 string
+                 
+               | ID   { verificaIDNumber(_input.LT(-1).getText());
+                        _exprID = _input.LT(-1).getText(); } 
+                 ATTR { _exprContent = ""; } 
+                 expr
+               ) 
+               
                SC
-               {
-               	 CommandExpr cmd = new CommandExpr(_exprID, _exprContent);
+               { CommandExpr cmd = new CommandExpr(_exprID, _exprContent);
                	 stack.peek().add(cmd);
                }
 			;
 			
 			
 cmdIf		:  'se' AP
-                    ID    { verificaID(_input.LT(-1).getText());
+                    ID    { verificaIDNumber(_input.LT(-1).getText());
                     		_exprIf = _input.LT(-1).getText(); }
                     OPREL { _exprIf += _input.LT(-1).getText(); }
-                    ( ID { verificaID(_input.LT(-1).getText()); }
+                    ( ID { verificaIDNumber(_input.LT(-1).getText()); }
                     | NUMBER) {_exprIf += _input.LT(-1).getText(); }
                     FP
                     
@@ -160,21 +178,19 @@ cmdIf		:  'se' AP
                     	stack.push(curThread);
                    	}
                     (cmd)+ 
-                    
                     FCH 
-                    {
-                       	listaTrue = stack.pop();	
-                    } 
+                    
+                    { listaTrue = stack.pop(); } 
+                    
                    ('senao' 
                    	 ACH
-                   	 {
-                   	 	curThread = new ArrayList<AbstractCommand>();
+                   	 {	curThread = new ArrayList<AbstractCommand>();
                    	 	stack.push(curThread);
                    	 } 
                    	(cmd+) 
                    	FCH
-                   	{
-                   		listaFalse = stack.pop();
+                   	
+                   	{	listaFalse = stack.pop();
                    		CommandIf cmd = new CommandIf(_exprIf, listaTrue, listaFalse);
                    		stack.peek().add(cmd);
                    	}
@@ -183,10 +199,10 @@ cmdIf		:  'se' AP
             
 			
 cmdEnquanto	:  'enquanto' AP
-                    	  ID    { verificaID(_input.LT(-1).getText());
+                    	  ID    { verificaIDNumber(_input.LT(-1).getText());
                     	  		  _exprEnquanto = _input.LT(-1).getText(); }
                     	  OPREL { _exprEnquanto += _input.LT(-1).getText(); }
-                    	  ( ID { verificaID(_input.LT(-1).getText()); }
+                    	  ( ID { verificaIDNumber(_input.LT(-1).getText()); }
                     	  | NUMBER) { _exprEnquanto += _input.LT(-1).getText(); }
                     	  FP
                     
@@ -205,22 +221,20 @@ cmdEnquanto	:  'enquanto' AP
             ;
             			
 			
-expr		:  termo ( 
-	             OP  { _exprContent += _input.LT(-1).getText();}
-	            termo
-	            )*
+expr		: termo ( OP  { _exprContent += _input.LT(-1).getText(); }
+	            	  termo )*
 			;
 			
-termo		: ID { verificaID(_input.LT(-1).getText());
-	               _exprContent += _input.LT(-1).getText();
-                 } 
-            | 
-              NUMBER
-              {
-              	_exprContent += _input.LT(-1).getText();
-              }
+termo		: ( ID { verificaIDNumber(_input.LT(-1).getText()); } 
+              | NUMBER
+              ) { _exprContent += _input.LT(-1).getText(); }
 			;
 			
+string		: ( ID { verificaIDText(_input.LT(-1).getText()); } 
+              | TEXT
+              ) { _exprContent += _input.LT(-1).getText(); }
+			;
+
 	
 AP	: '('
 	;
@@ -258,7 +272,10 @@ ID	: [a-z] ([a-z] | [A-Z] | [0-9])*
 NUMBER	: [0-9]+ ('.' [0-9]+)?
 		;
 		
-TEXT	: ASP ([a-z] | [A-Z])+ ASP
+TEXT	: ASP ([a-z] | [A-Z]) (PONT | ' ' | [a-z] | [A-Z] | [0-9])* ASP
+		;
+		
+PONT	: '.' | ',' | ':' | '?' | '!' | '-' | '='
 		;
 		
 WS	: (' ' | '\t' | '\n' | '\r') -> skip;
