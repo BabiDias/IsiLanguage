@@ -20,6 +20,12 @@ public class CommandExpr extends AbstractCommand{
 	public String toString() {
 		return "CommandExpr [id=" + id + ", expr=" + expr + "]";
 	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
 	
 	
 

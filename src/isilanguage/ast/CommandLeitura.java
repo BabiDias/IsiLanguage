@@ -20,5 +20,11 @@ public class CommandLeitura extends AbstractCommand {
 	public String toString() {
 		return "CommandLeitura [id=" + id + "]";
 	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
 
 }

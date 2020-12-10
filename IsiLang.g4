@@ -20,13 +20,14 @@ grammar IsiLang;
 	private int _tipo;
 	private String _varName;
 	private String _varValue;
+	private ArrayList<String> _varNaoAtribuidas = new ArrayList<String>();
+	private ArrayList<String> _varNaoUtilizadas = new ArrayList<String>();
 	private IsiSymbolTable symbolTable = new IsiSymbolTable();
 	private IsiSymbol symbol;
 	private IsiProgram program = new IsiProgram();
 	private ArrayList<AbstractCommand> curThread;
 	private Stack<ArrayList<AbstractCommand>> stack = new Stack<ArrayList<AbstractCommand>>();
 	private String _readID;
-	private String _exprEscreva;
 	private String _exprID;
 	private String _exprContent;
 	private String _exprIf;
@@ -37,21 +38,33 @@ grammar IsiLang;
 	
 	public void verificaID(String id){
 		if (!symbolTable.exists(id)){
-			throw new IsiSemanticException("Symbol "+id+" not declared");
+			throw new IsiSemanticException("Symbol '"+id+"' not declared");
 		}
 	}
 	
 	public void verificaIDNumber(String id){
 		verificaID(id);
 		if (((IsiVariable) symbolTable.get(id)).getType() != 0){
-			throw new IsiSemanticException("Variable "+id+" is not type NUMBER");
+			throw new IsiSemanticException("Variable '"+id+"' is not type NUMBER");
 		}
 	}
 	
 	public void verificaIDText(String id){
 		verificaID(id);
 		if (((IsiVariable) symbolTable.get(id)).getType() != 1){
-			throw new IsiSemanticException("Variable "+id+" is not type TEXT");
+			throw new IsiSemanticException("Variable '"+id+"' is not type TEXT");
+		}
+	}
+	
+	public void variaveisNaoAtribuidas(){
+		for (String var: _varNaoAtribuidas){
+			System.out.println("Warning: Variable '" +var+ "' declared but never used.");
+		}
+	}
+	
+	public void variaveisNaoUtilizadas(){
+		for (String var: _varNaoUtilizadas){
+			System.out.println("Warning: Variable '" +var+ "' value is never used.");
 		}
 	}
 	
@@ -79,6 +92,7 @@ decl    :  (declaravar)+
 declaravar :  tipo ID  {
 	                  _varName = _input.LT(-1).getText();
 	                  _varValue = null;
+	                  _varNaoAtribuidas.add(_varName);
 	                  symbol = new IsiVariable(_varName, _tipo, _varValue);
 	                  if (!symbolTable.exists(_varName)){
 	                     symbolTable.add(symbol);	
@@ -90,6 +104,7 @@ declaravar :  tipo ID  {
               	 ID {
 	                  _varName = _input.LT(-1).getText();
 	                  _varValue = null;
+	                  _varNaoAtribuidas.add(_varName);
 	                  symbol = new IsiVariable(_varName, _tipo, _varValue);
 	                  if (!symbolTable.exists(_varName)){
 	                     symbolTable.add(symbol);	
@@ -122,6 +137,8 @@ cmd		:  cmdLeitura
 cmdLeitura	: 'leia' AP
                      ID { verificaID(_input.LT(-1).getText());
                      	  _readID = _input.LT(-1).getText();
+                     	  _varNaoAtribuidas.remove(new String(_readID));
+                          _varNaoUtilizadas.add(_readID);
                         } 
                      FP 
                      SC 
@@ -134,26 +151,32 @@ cmdLeitura	: 'leia' AP
 			;
 			
 cmdEscrita	: 'escreva' 
-                 AP 
-                 ( ID		{ verificaID(_input.LT(-1).getText()); }
-                 | NUMBER   
-                 | TEXT) 	{ _exprEscreva = _input.LT(-1).getText(); }
+                 AP 		{ _exprContent = ""; }
+                 ( ID		{ verificaID(_input.LT(-1).getText()); 
+                 			  _exprContent = _input.LT(-1).getText(); 
+                 			  _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
+                 | expr   
+                 | string)
                  FP 
                  SC
                {
-               	  CommandEscrita cmd = new CommandEscrita(_exprEscreva);
+               	  CommandEscrita cmd = new CommandEscrita(_exprContent);
                	  stack.peek().add(cmd);
                }
 			;
 	
 			
 cmdExpr		:  ( ID   { verificaIDText(_input.LT(-1).getText());
-                        _exprID = _input.LT(-1).getText(); } 
+                        _exprID = _input.LT(-1).getText();
+                        _varNaoAtribuidas.remove(new String(_exprID));
+                        _varNaoUtilizadas.add(_exprID); } 
                  ATTR { _exprContent = ""; } 
                  string
                  
                | ID   { verificaIDNumber(_input.LT(-1).getText());
-                        _exprID = _input.LT(-1).getText(); } 
+                        _exprID = _input.LT(-1).getText();
+                        _varNaoAtribuidas.remove(new String(_exprID));
+                        _varNaoUtilizadas.add(_exprID); } 
                  ATTR { _exprContent = ""; } 
                  expr
                ) 
@@ -167,9 +190,11 @@ cmdExpr		:  ( ID   { verificaIDText(_input.LT(-1).getText());
 			
 cmdIf		:  'se' AP
                     ID    { verificaIDNumber(_input.LT(-1).getText());
-                    		_exprIf = _input.LT(-1).getText(); }
+                    		_exprIf = _input.LT(-1).getText();
+                    		_varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
                     OPREL { _exprIf += _input.LT(-1).getText(); }
-                    ( ID { verificaIDNumber(_input.LT(-1).getText()); }
+                    ( ID { verificaIDNumber(_input.LT(-1).getText());
+                           _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
                     | NUMBER) {_exprIf += _input.LT(-1).getText(); }
                     FP
                     
@@ -200,9 +225,11 @@ cmdIf		:  'se' AP
 			
 cmdEnquanto	:  'enquanto' AP
                     	  ID    { verificaIDNumber(_input.LT(-1).getText());
-                    	  		  _exprEnquanto = _input.LT(-1).getText(); }
+                    	  		  _exprEnquanto = _input.LT(-1).getText(); 
+                    	  		  _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
                     	  OPREL { _exprEnquanto += _input.LT(-1).getText(); }
-                    	  ( ID { verificaIDNumber(_input.LT(-1).getText()); }
+                    	  ( ID { verificaIDNumber(_input.LT(-1).getText()); 
+                    	         _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
                     	  | NUMBER) { _exprEnquanto += _input.LT(-1).getText(); }
                     	  FP
                     
@@ -221,18 +248,23 @@ cmdEnquanto	:  'enquanto' AP
             ;
             			
 			
-expr		: termo ( OP  { _exprContent += _input.LT(-1).getText(); }
+expr		: termo ( (OPAD | OP)  { _exprContent += _input.LT(-1).getText(); }
 	            	  termo )*
 			;
 			
-termo		: ( ID { verificaIDNumber(_input.LT(-1).getText()); } 
+termo		: ( ID { verificaIDNumber(_input.LT(-1).getText());
+                     _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
               | NUMBER
               ) { _exprContent += _input.LT(-1).getText(); }
 			;
 			
-string		: ( ID { verificaIDText(_input.LT(-1).getText()); } 
+string		: ( ID 		{ verificaID(_input.LT(-1).getText()); 
+                     	  _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
               | TEXT
-              ) { _exprContent += _input.LT(-1).getText(); }
+              )			{ _exprContent += _input.LT(-1).getText(); }
+               (OPAD 	{ _exprContent += _input.LT(-1).getText(); }
+              	string	
+               )* 
 			;
 
 	
@@ -245,7 +277,10 @@ FP	: ')'
 SC	: ';'
 	;
 	
-OP	: '+' | '-' | '*' | '/'
+OP	: '-' | '*' | '/'
+	;
+	
+OPAD: '+'
 	;
 	
 ATTR : '='
@@ -272,7 +307,7 @@ ID	: [a-z] ([a-z] | [A-Z] | [0-9])*
 NUMBER	: [0-9]+ ('.' [0-9]+)?
 		;
 		
-TEXT	: ASP ([a-z] | [A-Z]) (PONT | ' ' | [a-z] | [A-Z] | [0-9])* ASP
+TEXT	: ASP (PONT | ' ' | [a-z] | [A-Z] | [0-9])+ ASP
 		;
 		
 PONT	: '.' | ',' | ':' | '?' | '!' | '-' | '='

@@ -1,6 +1,6 @@
 programa
 
-  numero a, b;
+  numero a, b, c, d;
   texto  t1, t2, t3;
 
   escreva ("Digite um numero:");
@@ -10,30 +10,30 @@ programa
   escreva ("Digite um texto:");
   leia(t1);
   
-
-  a = 1 + 2 * 10 / b;
+  c = 1;
+  a = 1.5 + 2 * 10 / b;
   t2 = "ola mundo";
-  t3 = t2;
+  t3 = t2 + "!";
  
   se (b < 10) {
-  	escreva (a);
+  	escreva (b + " eh menor que 10");
   } 
   senao {
   	escreva (b);
   }
 
   
-  escreva (10);
+  escreva (b+10);
   escreva (t1);
   escreva (t2);
   escreva (t3);
 
   enquanto (a > b) {
-  	escreva (a);
+  	escreva ("a = " + a);
   	a = a-1;
   }
   
-  enquanto (a < b) {
+  enquanto (a <= b) {
   	escreva (a);
   	a = a+1;
   }
