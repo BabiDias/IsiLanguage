@@ -1,8 +1,9 @@
 programa
 
-  numero a, b, c;
+  numero a, b, i;
   texto  t1, t2, t3;
-
+  boolean b1, b2;
+  
   escreva ("Digite um numero:");
   leia(a);
   escreva ("Digite um numero:");
@@ -13,9 +14,12 @@ programa
   a = ((1 + 2 * 10) + 2*3)/((20/2) - b);
   t2 = "ola mundo";
   t3 = t2 + "!";
+  
+  b1 = a < b || b < 10;
+  b2 = false;
  
-  se (b < 10) {
-  	escreva (b + " eh menor que 10");
+  se (b1 || b2 || !(b2 && b1)) {
+  	escreva ("Passou na condicao booleana");
   } 
   senao {
   	escreva (b);
@@ -34,6 +38,10 @@ programa
   enquanto (a <= b) {
   	escreva (a);
   	a = a+1;
+  }
+  
+  para (i = 0; i <= 10; passo 2) {
+  	escreva(i);
   }
 
 fimprog;

@@ -12,6 +12,7 @@ grammar IsiLang;
 	import isilanguage.ast.CommandExpr;
 	import isilanguage.ast.CommandIf;
 	import isilanguage.ast.CommandEnquanto;
+	import isilanguage.ast.CommandPara;
 	import java.util.ArrayList;
 	import java.util.Stack;
 }
@@ -30,8 +31,9 @@ grammar IsiLang;
 	private String _readID;
 	private String _exprID;
 	private String _exprContent;
-	private String _exprIf;
-	private String _exprEnquanto;
+	private String _exprBool = "";
+	private String _passoVal;
+	private String _forInit;
 	private ArrayList<AbstractCommand> listaTrue;
 	private ArrayList<AbstractCommand> listaFalse;
 	private ArrayList<AbstractCommand> comandoEnquanto;
@@ -53,6 +55,13 @@ grammar IsiLang;
 		verificaID(id);
 		if (((IsiVariable) symbolTable.get(id)).getType() != 1){
 			throw new IsiSemanticException("Variable '"+id+"' is not type TEXT.");
+		}
+	}
+	
+	public void verificaIDBool(String id) {
+		verificaID(id);
+		if (((IsiVariable) symbolTable.get(id)).getType() != 2){
+			throw new IsiSemanticException("Variable '"+id+"' is not type BOOL.");
 		}
 	}
 	
@@ -127,8 +136,9 @@ declaravar :  tipo ID  {
                SC
            ;
            
-tipo       : 'numero' { _tipo = IsiVariable.NUMBER;  }
-           | 'texto'  { _tipo = IsiVariable.TEXT;  }
+tipo       : 'numero'  { _tipo = IsiVariable.NUMBER;  }
+           | 'texto'   { _tipo = IsiVariable.TEXT;  }
+           | 'boolean' { _tipo = IsiVariable.BOOL;  }
            ;
         
 bloco	: { curThread = new ArrayList<AbstractCommand>(); 
@@ -143,6 +153,7 @@ cmd		:  cmdLeitura
  		|  cmdExpr
  		|  cmdIf
  		|  cmdEnquanto 
+ 		|  cmdPara
 		;
 		
 cmdLeitura	: 'leia' AP
@@ -177,13 +188,18 @@ cmdEscrita	: 'escreva'
 			;
 	
 			
-cmdExpr		:  ( ID   { verificaIDText(_input.LT(-1).getText());
+cmdExpr		:  ( ID   { verificaIDBool(_input.LT(-1).getText());
+                        _exprID = _input.LT(-1).getText();
+                        _varNaoAtribuidas.remove(new String(_exprID));
+                        _varNaoUtilizadas.remove(new String(_exprID));} 
+                 ATTR { _exprContent = ""; _exprBool = "";} 
+                 boolExpr { _exprContent = _exprBool;}
+			   | ID   { verificaIDText(_input.LT(-1).getText());
                         _exprID = _input.LT(-1).getText();
                         _varNaoAtribuidas.remove(new String(_exprID));
                         _varNaoUtilizadas.remove(new String(_exprID));} 
                  ATTR { _exprContent = ""; } 
                  string
-                 
                | ID   { verificaIDNumber(_input.LT(-1).getText());
                         _exprID = _input.LT(-1).getText();
                         _varNaoAtribuidas.remove(new String(_exprID));
@@ -199,50 +215,36 @@ cmdExpr		:  ( ID   { verificaIDText(_input.LT(-1).getText());
 			;
 			
 			
-cmdIf		:  'se' AP
-                    ID    { verificaIDNumber(_input.LT(-1).getText());
-                    		_exprIf = _input.LT(-1).getText();
-                    		_varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
-                    OPREL { _exprIf += _input.LT(-1).getText(); }
-                    ( ID { verificaIDNumber(_input.LT(-1).getText());
-                           _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
-                    | NUMBER) {_exprIf += _input.LT(-1).getText(); }
-                    FP
-                    
-                    ACH 
-                    { curThread = new ArrayList<AbstractCommand>(); 
-                    	stack.push(curThread);
-                   	}
-                    (cmd)+ 
-                    FCH 
-                    
-                    { listaTrue = stack.pop(); } 
-                    
-                   ('senao' 
-                   	 ACH
-                   	 {	curThread = new ArrayList<AbstractCommand>();
-                   	 	stack.push(curThread);
-                   	 } 
-                   	(cmd+) 
-                   	FCH
-                   	
-                   	{	listaFalse = stack.pop();
-                   		CommandIf cmd = new CommandIf(_exprIf, listaTrue, listaFalse);
-                   		stack.peek().add(cmd);
-                   	}
-                   )?
+cmdIf		:  { _exprBool = ""; }
+			   'se' AP boolExpr FP
+                
+                ACH 
+                { curThread = new ArrayList<AbstractCommand>(); 
+                	stack.push(curThread);
+               	}
+                (cmd)+ 
+                FCH 
+                
+                { listaTrue = stack.pop(); } 
+                
+               ('senao' 
+               	 ACH
+               	 {	curThread = new ArrayList<AbstractCommand>();
+               	 	stack.push(curThread);
+               	 } 
+               	(cmd+) 
+               	FCH
+               	
+               	{	listaFalse = stack.pop();
+               		CommandIf cmd = new CommandIf(_exprBool, listaTrue, listaFalse);
+               		stack.peek().add(cmd);
+               	}
+               )?
             ;
             
 			
-cmdEnquanto	:  'enquanto' AP
-                    	  ID    { verificaIDNumber(_input.LT(-1).getText());
-                    	  		  _exprEnquanto = _input.LT(-1).getText(); 
-                    	  		  _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
-                    	  OPREL { _exprEnquanto += _input.LT(-1).getText(); }
-                    	  ( ID { verificaIDNumber(_input.LT(-1).getText()); 
-                    	         _varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); } 
-                    	  | NUMBER) { _exprEnquanto += _input.LT(-1).getText(); }
-                    	  FP
+cmdEnquanto	:  	{ _exprBool = ""; }
+				'enquanto' AP boolExpr FP
                     
                     	  ACH 
                    	  	  { curThread = new ArrayList<AbstractCommand>(); 
@@ -253,10 +255,41 @@ cmdEnquanto	:  'enquanto' AP
                     	  FCH 
                     	  {
                        		  comandoEnquanto = stack.pop();
-                       		  CommandEnquanto cmd = new CommandEnquanto(_exprEnquanto, comandoEnquanto);
+                       		  CommandEnquanto cmd = new CommandEnquanto(_exprBool, comandoEnquanto);
                    			  stack.peek().add(cmd);	
                     	  } 
             ;
+            
+cmdPara	:  	{ _exprBool = ""; }
+				'para' AP attPara 
+				SC boolExpr 
+				SC 'passo' NUMBER {
+					_passoVal = _input.LT(-1).getText();
+				}
+				FP
+                    
+                    	  ACH 
+                   	  	  { curThread = new ArrayList<AbstractCommand>(); 
+                    		  stack.push(curThread);
+                   		  }
+                    	  (cmd)+ 
+                    
+                    	  FCH 
+                    	  {
+                       		  comandoEnquanto = stack.pop();
+                       		  CommandPara cmd = new CommandPara(_exprID, _forInit, _exprBool, _passoVal, comandoEnquanto);
+                   			  stack.peek().add(cmd);	
+                    	  } 
+            ;
+            
+attPara	: ID   {
+					_exprID = _input.LT(-1).getText();
+					_varNaoAtribuidas.remove(_exprID);
+					_varNaoUtilizadas.remove(_exprID);
+                } 
+         ATTR { _exprContent = ""; } 
+         expr { _forInit = _exprContent; }
+         ;
             			
 			
 expr		: termo ( (OPAD | OP)		{ _exprContent += _input.LT(-1).getText(); }
@@ -282,8 +315,84 @@ string		: ( ID 		{ verificaID(_input.LT(-1).getText());
               )			{ _exprContent += _input.LT(-1).getText(); }
                (OPAD 	{ _exprContent += _input.LT(-1).getText(); }
               	string	
-               )* 
+               )*
 			;
+			
+boolExpr : 	( 
+				boolRel 
+				| notExpr 
+				| ID { 
+						verificaIDBool(_input.LT(-1).getText()); 
+						_exprBool += _input.LT(-1).getText();
+                  } 
+			)
+			(
+				OPBOOL { _exprBool += _input.LT(-1).getText(); }
+				boolExpr
+			)* 
+			;
+			
+notExpr : NOT { _exprBool += "!"; }
+		  AP { _exprBool += "("; }
+		  boolExpr
+		  FP { _exprBool += ")"; }
+		;
+boolRel : ('true' | 'false') { _exprBool += _input.LT(-1).getText(); }
+		| boolNumRel
+		| boolStringRel
+		| boolBoolRel
+      	;
+      	
+boolNumRel	: (
+				ID { 
+					verificaIDNumber(_input.LT(-1).getText());
+				  	_varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); 
+				} 
+				| NUMBER
+				) { _exprBool += _input.LT(-1).getText(); }
+			OPREL { _exprBool += _input.LT(-1).getText(); }
+			( 
+				ID { 
+		    		verificaIDNumber(_input.LT(-1).getText());
+		           	_varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); 
+		     	}
+		  		| NUMBER
+		  	) {_exprBool += _input.LT(-1).getText(); }
+		  	;
+		  	
+boolStringRel : (
+				ID { 
+					verificaIDText(_input.LT(-1).getText());
+				  	_varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); 
+				} 
+				| TEXT
+			) { _exprBool += _input.LT(-1).getText(); }
+			OPREL { _exprBool += _input.LT(-1).getText(); }
+			( 
+				ID { 
+		    		verificaIDText(_input.LT(-1).getText());
+		           	_varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); 
+		     	}
+		  		| TEXT
+		  	) {_exprBool += _input.LT(-1).getText(); }
+		  	;
+		  	
+boolBoolRel : (
+				ID { 
+					verificaIDBool(_input.LT(-1).getText());
+				  	_varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); 
+				} 
+				| ('true' | 'false')
+			) { _exprBool += _input.LT(-1).getText(); }
+			OPREL { _exprBool += _input.LT(-1).getText(); }
+			( 
+				ID { 
+		    		verificaIDBool(_input.LT(-1).getText());
+		           	_varNaoUtilizadas.remove(new String(_input.LT(-1).getText())); 
+		     	}
+		  		| ('true' | 'false')
+		  	) {_exprBool += _input.LT(-1).getText(); }
+		  	;
 
 	
 AP	: '('
@@ -318,6 +427,12 @@ ASP  : '"'
 	 
 OPREL : '>' | '<' | '>=' | '<=' | '==' | '!='
       ;
+      
+OPBOOL : '&&' | '||'
+	   ;
+	   
+NOT : '!'
+	;
       
 ID	: [a-z] ([a-z] | [A-Z] | [0-9])*
 	;

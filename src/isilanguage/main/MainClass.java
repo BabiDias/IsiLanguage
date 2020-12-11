@@ -39,6 +39,7 @@ public class MainClass {
 		catch (Exception ex) {
 			ex.printStackTrace();
 			System.err.println("ERROR: " + ex.getMessage());
+			ex.printStackTrace();
 		}
 	}
 }

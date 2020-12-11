@@ -12,6 +12,7 @@ package isilanguage.parser;
 	import isilanguage.ast.CommandExpr;
 	import isilanguage.ast.CommandIf;
 	import isilanguage.ast.CommandEnquanto;
+	import isilanguage.ast.CommandPara;
 	import java.util.ArrayList;
 	import java.util.Stack;
 
@@ -133,6 +134,26 @@ public interface IsiLangListener extends ParseTreeListener {
 	 */
 	void exitCmdEnquanto(IsiLangParser.CmdEnquantoContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link IsiLangParser#cmdPara}.
+	 * @param ctx the parse tree
+	 */
+	void enterCmdPara(IsiLangParser.CmdParaContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link IsiLangParser#cmdPara}.
+	 * @param ctx the parse tree
+	 */
+	void exitCmdPara(IsiLangParser.CmdParaContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link IsiLangParser#attPara}.
+	 * @param ctx the parse tree
+	 */
+	void enterAttPara(IsiLangParser.AttParaContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link IsiLangParser#attPara}.
+	 * @param ctx the parse tree
+	 */
+	void exitAttPara(IsiLangParser.AttParaContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link IsiLangParser#expr}.
 	 * @param ctx the parse tree
 	 */
@@ -162,4 +183,64 @@ public interface IsiLangListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitString(IsiLangParser.StringContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link IsiLangParser#boolExpr}.
+	 * @param ctx the parse tree
+	 */
+	void enterBoolExpr(IsiLangParser.BoolExprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link IsiLangParser#boolExpr}.
+	 * @param ctx the parse tree
+	 */
+	void exitBoolExpr(IsiLangParser.BoolExprContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link IsiLangParser#notExpr}.
+	 * @param ctx the parse tree
+	 */
+	void enterNotExpr(IsiLangParser.NotExprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link IsiLangParser#notExpr}.
+	 * @param ctx the parse tree
+	 */
+	void exitNotExpr(IsiLangParser.NotExprContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link IsiLangParser#boolRel}.
+	 * @param ctx the parse tree
+	 */
+	void enterBoolRel(IsiLangParser.BoolRelContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link IsiLangParser#boolRel}.
+	 * @param ctx the parse tree
+	 */
+	void exitBoolRel(IsiLangParser.BoolRelContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link IsiLangParser#boolNumRel}.
+	 * @param ctx the parse tree
+	 */
+	void enterBoolNumRel(IsiLangParser.BoolNumRelContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link IsiLangParser#boolNumRel}.
+	 * @param ctx the parse tree
+	 */
+	void exitBoolNumRel(IsiLangParser.BoolNumRelContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link IsiLangParser#boolStringRel}.
+	 * @param ctx the parse tree
+	 */
+	void enterBoolStringRel(IsiLangParser.BoolStringRelContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link IsiLangParser#boolStringRel}.
+	 * @param ctx the parse tree
+	 */
+	void exitBoolStringRel(IsiLangParser.BoolStringRelContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link IsiLangParser#boolBoolRel}.
+	 * @param ctx the parse tree
+	 */
+	void enterBoolBoolRel(IsiLangParser.BoolBoolRelContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link IsiLangParser#boolBoolRel}.
+	 * @param ctx the parse tree
+	 */
+	void exitBoolBoolRel(IsiLangParser.BoolBoolRelContext ctx);
 }
