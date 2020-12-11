@@ -1,6 +1,6 @@
 programa
 
-  numero a, b, c, d;
+  numero a, b, c;
   texto  t1, t2, t3;
 
   escreva ("Digite um numero:");
@@ -10,8 +10,7 @@ programa
   escreva ("Digite um texto:");
   leia(t1);
   
-  c = 1;
-  a = 1.5 + 2 * 10 / b;
+  a = ((1 + 2 * 10) + 2*3)/((20/2) - b);
   t2 = "ola mundo";
   t3 = t2 + "!";
  
@@ -22,7 +21,6 @@ programa
   	escreva (b);
   }
 
-  
   escreva (b+10);
   escreva (t1);
   escreva (t2);

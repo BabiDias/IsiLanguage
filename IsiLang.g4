@@ -38,33 +38,42 @@ grammar IsiLang;
 	
 	public void verificaID(String id){
 		if (!symbolTable.exists(id)){
-			throw new IsiSemanticException("Symbol '"+id+"' not declared");
+			throw new IsiSemanticException("Variable '"+id+"' was not declared.");
 		}
 	}
 	
 	public void verificaIDNumber(String id){
 		verificaID(id);
 		if (((IsiVariable) symbolTable.get(id)).getType() != 0){
-			throw new IsiSemanticException("Variable '"+id+"' is not type NUMBER");
+			throw new IsiSemanticException("Variable '"+id+"' is not type NUMBER.");
 		}
 	}
 	
 	public void verificaIDText(String id){
 		verificaID(id);
 		if (((IsiVariable) symbolTable.get(id)).getType() != 1){
-			throw new IsiSemanticException("Variable '"+id+"' is not type TEXT");
+			throw new IsiSemanticException("Variable '"+id+"' is not type TEXT.");
 		}
 	}
 	
-	public void variaveisNaoAtribuidas(){
+	public void variaveisNaoUtilizadas(){
 		for (String var: _varNaoAtribuidas){
 			System.out.println("Warning: Variable '" +var+ "' declared but never used.");
 		}
 	}
 	
-	public void variaveisNaoUtilizadas(){
-		for (String var: _varNaoUtilizadas){
-			System.out.println("Warning: Variable '" +var+ "' value is never used.");
+	public void variaveisUtilizadasNaoAtribuidas(){
+		Boolean flag = false;
+		for (String i: _varNaoAtribuidas){
+			for (String j: _varNaoUtilizadas){
+				if (i.equals(j)){
+					flag = true;
+				}
+			}
+			if (!flag){
+				throw new IsiSemanticException("Variable '"+i+"' has no value.");
+			}
+			flag = false;
 		}
 	}
 	
@@ -93,6 +102,7 @@ declaravar :  tipo ID  {
 	                  _varName = _input.LT(-1).getText();
 	                  _varValue = null;
 	                  _varNaoAtribuidas.add(_varName);
+	                  _varNaoUtilizadas.add(_varName);
 	                  symbol = new IsiVariable(_varName, _tipo, _varValue);
 	                  if (!symbolTable.exists(_varName)){
 	                     symbolTable.add(symbol);	
@@ -105,6 +115,7 @@ declaravar :  tipo ID  {
 	                  _varName = _input.LT(-1).getText();
 	                  _varValue = null;
 	                  _varNaoAtribuidas.add(_varName);
+	                  _varNaoUtilizadas.add(_varName);
 	                  symbol = new IsiVariable(_varName, _tipo, _varValue);
 	                  if (!symbolTable.exists(_varName)){
 	                     symbolTable.add(symbol);	
@@ -138,7 +149,7 @@ cmdLeitura	: 'leia' AP
                      ID { verificaID(_input.LT(-1).getText());
                      	  _readID = _input.LT(-1).getText();
                      	  _varNaoAtribuidas.remove(new String(_readID));
-                          _varNaoUtilizadas.add(_readID);
+                          _varNaoUtilizadas.remove(new String(_readID));
                         } 
                      FP 
                      SC 
@@ -169,14 +180,14 @@ cmdEscrita	: 'escreva'
 cmdExpr		:  ( ID   { verificaIDText(_input.LT(-1).getText());
                         _exprID = _input.LT(-1).getText();
                         _varNaoAtribuidas.remove(new String(_exprID));
-                        _varNaoUtilizadas.add(_exprID); } 
+                        _varNaoUtilizadas.remove(new String(_exprID));} 
                  ATTR { _exprContent = ""; } 
                  string
                  
                | ID   { verificaIDNumber(_input.LT(-1).getText());
                         _exprID = _input.LT(-1).getText();
                         _varNaoAtribuidas.remove(new String(_exprID));
-                        _varNaoUtilizadas.add(_exprID); } 
+                        _varNaoUtilizadas.remove(new String(_exprID));} 
                  ATTR { _exprContent = ""; } 
                  expr
                ) 
@@ -248,8 +259,15 @@ cmdEnquanto	:  'enquanto' AP
             ;
             			
 			
-expr		: termo ( (OPAD | OP)  { _exprContent += _input.LT(-1).getText(); }
+expr		: termo ( (OPAD | OP)		{ _exprContent += _input.LT(-1).getText(); }
 	            	  termo )*
+	          |
+	          (termo (OPAD | OP)		{ _exprContent += _input.LT(-1).getText(); }
+	          		)* 	AP 				{ _exprContent += _input.LT(-1).getText(); }
+	          			expr 
+	          			FP 				{ _exprContent += _input.LT(-1).getText(); }
+	          			((OPAD | OP)	{ _exprContent += _input.LT(-1).getText(); }
+	          			(termo | expr))*
 			;
 			
 termo		: ( ID { verificaIDNumber(_input.LT(-1).getText());

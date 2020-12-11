@@ -6,7 +6,6 @@ public static void main(String args[]) {
 double  a;
 double  b;
 double  c;
-double  d;
 String  t1;
 String  t2;
 String  t3;
@@ -16,8 +15,7 @@ System.out.println("Digite um numero:");
 b=Double.parseDouble(_key.nextLine());
 System.out.println("Digite um texto:");
 t1=_key.nextLine();
-c = 1;
-a = 1.5+2*10/b;
+a = ((1+2*10)+2*3)/((20/2)-b);
 t2 = "ola mundo";
 t3 = t2+"!";
 if (b<10) {

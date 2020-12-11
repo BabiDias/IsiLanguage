@@ -29,7 +29,7 @@ public class MainClass {
 			
 			parser.generateCode();
 			
-			parser.variaveisNaoAtribuidas();
+			parser.variaveisUtilizadasNaoAtribuidas();
 			
 			parser.variaveisNaoUtilizadas();
 		}
