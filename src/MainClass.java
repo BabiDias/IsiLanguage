@@ -22,7 +22,7 @@ t2 = "ola mundo";
 t3 = t2+"!";
 b1 = a<b||b<10;
 b2 = false;
-if (b1||b2||!(b2&&b1)) {
+if (b1||b2||!(b2 && b1)) {
 System.out.println("Passou na condicao booleana");
 }else {
 System.out.println(b);
@@ -40,7 +40,7 @@ while (a<=b) {
 System.out.println(a);
 a = a+1;
 }
-for (i=0; i<=10; i+=2) {
+for (i = 0; i<=10; i+=2) {
 System.out.println(i);
 }
 _key.close();
