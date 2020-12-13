@@ -97,6 +97,8 @@ grammar IsiLang;
 	}
 }
 
+/* Criando regras sintáticas */
+
 prog	: 'programa' decl bloco  'fimprog;'
            {  program.setVarTable(symbolTable);
            	  program.setComandos(stack.pop());
@@ -105,7 +107,6 @@ prog	: 'programa' decl bloco  'fimprog;'
 		
 decl    :  (declaravar)+
         ;
-        
         
 declaravar :  tipo ID  {
 	                  _varName = _input.LT(-1).getText();
@@ -209,8 +210,9 @@ cmdExpr		:  ( ID   { verificaIDBool(_input.LT(-1).getText());
                ) 
                
                SC
-               { CommandExpr cmd = new CommandExpr(_exprID, _exprContent);
-               	 stack.peek().add(cmd);
+               { 
+					CommandExpr cmd = new CommandExpr(_exprID, _exprContent);
+					stack.peek().add(cmd);
                }
 			;
 			
@@ -219,8 +221,9 @@ cmdIf		:  { _exprBool = ""; }
 			   'se' AP boolExpr FP
                 
                 ACH 
-                { curThread = new ArrayList<AbstractCommand>(); 
-                	stack.push(curThread);
+				{ 
+					curThread = new ArrayList<AbstractCommand>(); 
+					stack.push(curThread);
                	}
                 (cmd)+ 
                 FCH 
@@ -229,15 +232,17 @@ cmdIf		:  { _exprBool = ""; }
                 
                ('senao' 
                	 ACH
-               	 {	curThread = new ArrayList<AbstractCommand>();
+               	 {	
+					curThread = new ArrayList<AbstractCommand>();
                	 	stack.push(curThread);
                	 } 
                	(cmd+) 
                	FCH
                	
-               	{	listaFalse = stack.pop();
-               		CommandIf cmd = new CommandIf(_exprBool, listaTrue, listaFalse);
-               		stack.peek().add(cmd);
+				{	
+					listaFalse = stack.pop();
+					CommandIf cmd = new CommandIf(_exprBool, listaTrue, listaFalse);
+					stack.peek().add(cmd);
                	}
                )?
             ;
@@ -247,16 +252,17 @@ cmdEnquanto	:  	{ _exprBool = ""; }
 				'enquanto' AP boolExpr FP
                     
                     	  ACH 
-                   	  	  { curThread = new ArrayList<AbstractCommand>(); 
-                    		  stack.push(curThread);
+                   	  	  { 
+							curThread = new ArrayList<AbstractCommand>(); 
+							stack.push(curThread);
                    		  }
                     	  (cmd)+ 
                     
                     	  FCH 
                     	  {
-                       		  comandoEnquanto = stack.pop();
-                       		  CommandEnquanto cmd = new CommandEnquanto(_exprBool, comandoEnquanto);
-                   			  stack.peek().add(cmd);	
+							comandoEnquanto = stack.pop();
+							CommandEnquanto cmd = new CommandEnquanto(_exprBool, comandoEnquanto);
+							stack.peek().add(cmd);	
                     	  } 
             ;
             
@@ -269,16 +275,17 @@ cmdPara	:  	{ _exprBool = ""; }
 				FP
                     
                     	  ACH 
-                   	  	  { curThread = new ArrayList<AbstractCommand>(); 
-                    		  stack.push(curThread);
+                   	  	  { 
+							curThread = new ArrayList<AbstractCommand>(); 
+							stack.push(curThread);
                    		  }
                     	  (cmd)+ 
                     
                     	  FCH 
                     	  {
-                       		  comandoEnquanto = stack.pop();
-                       		  CommandPara cmd = new CommandPara(_exprID, _forInit, _exprBool, _passoVal, comandoEnquanto);
-                   			  stack.peek().add(cmd);	
+							comandoEnquanto = stack.pop();
+							CommandPara cmd = new CommandPara(_exprID, _forInit, _exprBool, _passoVal, comandoEnquanto);
+							stack.peek().add(cmd);	
                     	  } 
             ;
             
@@ -394,6 +401,7 @@ boolBoolRel : (
 		  	) {_exprBool += _input.LT(-1).getText(); }
 		  	;
 
+/* Criando regras lé xicas */
 	
 AP	: '('
 	;
